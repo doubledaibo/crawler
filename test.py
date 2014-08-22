@@ -12,4 +12,4 @@ from crawler import YFCCCrawler
 
 crawler = YFCCCrawler('crawler_config_video.yaml')
 
-crawler.crawl(50)
+crawler.crawl(50, dump_to_txt = True)

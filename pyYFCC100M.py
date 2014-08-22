@@ -12,6 +12,7 @@ import csv
 import logging
 import pprint
 import urllib
+import json
 from enum import Enum
 
 class YFCC_Item_TYPE(Enum):
@@ -20,13 +21,19 @@ class YFCC_Item_TYPE(Enum):
 
 class YFCCItem():
 
-    def __init__(self, id_, url_, name_, display_=None, raw=None, type_=YFCC_Item_TYPE.Image):
-        self._item_id = id_
-        self._item_url = url_
-        self._item_name = name_
-        self._display_list = display_
-        self._raw = raw
-        self._item_type = type_
+    def __init__(self, id_, url_, name_, des_ = '', display_=None, raw=None, type_=YFCC_Item_TYPE.Image):
+		self._item_id = id_
+		self._item_url = url_
+		self._item_name = name_
+		#---
+		self._des = des_
+		#---
+		self._display_list = display_
+		self._raw = raw
+		self._item_type = type_
+    @property
+    def des(self):
+		return self._des
 
     @property
     def url(self):
@@ -47,6 +54,10 @@ class YFCCItem():
     def display(self):
         pprint.pprint(self._display_list)
 
+    def dump_text(self):
+        return json.dumps(self._display_list)
+
+
 class YFCCLoader():
     """
     The Loader for YFCC100M dataset
@@ -56,6 +67,9 @@ class YFCCLoader():
         with open('url_config.yaml') as config:
             self._config = yaml.load(config)
             self._line_tags = self._config['Fields']
+			#used for filtered out data without description
+            self._des_tag_idx = self._line_tags.index(self._config['description_tag'])
+			#----
             self._url_tag_idx = self._line_tags.index(self._config['download_tag'])
             self._id_tag_idx = self._line_tags.index(self._config['id_tag'])
             self._type_marker = self._line_tags.index(self._config['type_marker'])
@@ -102,6 +116,9 @@ class YFCCLoader():
             return None
 
         return YFCCItem(ret[self._id_tag_idx], ret[self._url_tag_idx], '',
+				#----
+						des_=ret[self._des_tag_idx],
+				#----
                         type_=type_,
                         display_={name: urllib.unquote(ret[x]).decode('utf8') for name, x in zip(self._config['display'], self._display_fields)},
                         raw=ret)
